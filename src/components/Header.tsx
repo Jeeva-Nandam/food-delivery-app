@@ -6,7 +6,6 @@ export const Header: React.FC = () => {
   const {
     currentRoute,
     navigate,
-    navigateAdmin,
     totalCartCount,
     currentUser,
     isAuthenticated,
@@ -31,13 +30,30 @@ export const Header: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#FFFFFF] border-b border-[#E8E2DA] shadow-[0_4px_16px_rgba(31,27,24,0.06)]">
       {/* Top Heritage Notice Ribbon */}
-      <div className="bg-[#932616] text-[#ffffff] py-1.5 px-4 text-center overflow-hidden">
-        <p className="text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined text-sm text-[#ffdcc0]">verified</span>
-          <span>
-            Authentic Regional Indian Delicacies • Fresh Batches Dispatched Daily • Free Shipping on Orders above ₹699 • 100% Traditional & Preservative-Free
-          </span>
-        </p>
+      <div className="bg-[#932616] text-[#ffffff] py-1.5 px-4 overflow-hidden border-b border-[#7a1f12]">
+        {/* Mobile Viewport: Scrolling Marquee Effect to Optimize Space */}
+        <div className="md:hidden overflow-hidden whitespace-nowrap">
+          <div className="animate-marquee flex items-center gap-8 text-[11px] font-bold tracking-wider uppercase text-white/95">
+            <span className="flex items-center gap-1.5 shrink-0">
+              <span className="material-symbols-outlined text-sm text-[#ffdcc0]">verified</span>
+              <span>Authentic Regional Indian Delicacies • Fresh Batches Dispatched Daily • Free Shipping on Orders above ₹699 • 100% Traditional & Preservative-Free</span>
+            </span>
+            <span className="flex items-center gap-1.5 shrink-0">
+              <span className="material-symbols-outlined text-sm text-[#ffdcc0]">verified</span>
+              <span>Authentic Regional Indian Delicacies • Fresh Batches Dispatched Daily • Free Shipping on Orders above ₹699 • 100% Traditional & Preservative-Free</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Desktop Viewport: Centered Banner */}
+        <div className="hidden md:flex items-center justify-center text-center">
+          <p className="text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-sm text-[#ffdcc0]">verified</span>
+            <span>
+              Authentic Regional Indian Delicacies • Fresh Batches Dispatched Daily • Free Shipping on Orders above ₹699 • 100% Traditional & Preservative-Free
+            </span>
+          </p>
+        </div>
       </div>
 
       {/* Main Navigation Bar */}
@@ -98,16 +114,6 @@ export const Header: React.FC = () => {
 
         {/* Right Utility Actions */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-5 shrink-0">
-          {/* Admin Switcher Pill */}
-          <button
-            onClick={() => navigateAdmin('dashboard')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#342f2c] text-[#f8efea] text-xs font-semibold hover:bg-[#1f1b18] transition-colors shadow-sm"
-            title="Switch to Admin Operations Dashboard"
-          >
-            <span className="material-symbols-outlined text-base text-[#D49B24]">admin_panel_settings</span>
-            <span className="hidden sm:inline">Admin Hub</span>
-          </button>
-
           {/* Track Order */}
           <button
             onClick={() => navigate('track-order')}
@@ -124,7 +130,7 @@ export const Header: React.FC = () => {
                 if (isAuthenticated) {
                   setProfileDropdownOpen(!profileDropdownOpen);
                 } else {
-                  navigate('auth-check');
+                  navigate('login');
                 }
               }}
               className="flex items-center gap-2 pl-2 sm:pl-3 border-l border-[#E8E2DA] cursor-pointer group"
@@ -164,7 +170,7 @@ export const Header: React.FC = () => {
                 <button
                   onClick={() => {
                     setProfileDropdownOpen(false);
-                    navigate('delivery-address');
+                    navigate('checkout');
                   }}
                   className="w-full text-left px-4 py-2 text-xs text-[#1f1b18] hover:bg-[#fff8f5] flex items-center gap-2"
                 >
@@ -180,16 +186,6 @@ export const Header: React.FC = () => {
                 >
                   <span className="material-symbols-outlined text-sm">receipt_long</span>
                   My Orders History
-                </button>
-                <button
-                  onClick={() => {
-                    setProfileDropdownOpen(false);
-                    navigateAdmin('dashboard');
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#932616] font-semibold hover:bg-[#fff8f5] flex items-center gap-2 border-t border-[#E8E2DA]"
-                >
-                  <span className="material-symbols-outlined text-sm">store</span>
-                  Admin Dashboard
                 </button>
               </div>
             )}
@@ -274,20 +270,20 @@ export const Header: React.FC = () => {
                 navigate('track-order');
                 setMobileMenuOpen(false);
               }}
-              className="text-xs font-bold text-[#58413d] flex items-center gap-1.5"
+              className="text-xs font-bold text-[#58413d] hover:text-[#932616] flex items-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">local_shipping</span>
               Track Order
             </button>
             <button
               onClick={() => {
-                navigateAdmin('dashboard');
+                navigate('cart');
                 setMobileMenuOpen(false);
               }}
-              className="text-xs font-bold text-[#932616] flex items-center gap-1.5"
+              className="text-xs font-bold text-[#932616] flex items-center gap-1.5 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-base">admin_panel_settings</span>
-              Open Admin Portal
+              <span className="material-symbols-outlined text-base">shopping_bag</span>
+              View Cart ({totalCartCount})
             </button>
           </div>
         </div>

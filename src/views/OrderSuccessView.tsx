@@ -2,7 +2,7 @@ import React from 'react';
 import { useStore } from '../context/StoreContext';
 
 export const OrderSuccessView: React.FC = () => {
-  const { latestPlacedOrder, orders, navigate, navigateAdmin } = useStore();
+  const { latestPlacedOrder, orders, navigate } = useStore();
 
   const order = latestPlacedOrder || orders[0];
 
@@ -188,19 +188,19 @@ export const OrderSuccessView: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => navigate('home')}
-              className="px-5 py-2.5 bg-[#932616] text-white hover:bg-[#b43e2b] text-xs font-bold rounded-xl cursor-pointer shadow"
+              onClick={() => navigate(`/order/${encodeURIComponent((order?.orderNumber || '').replace(/^#/, ''))}`)}
+              className="px-4 py-2.5 bg-[#FAF8F5] border border-[#E8E2DA] hover:bg-[#eae1db] text-[#1f1b18] text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              Continue Shopping
+              <span className="material-symbols-outlined text-base text-[#932616]">receipt_long</span>
+              <span>View Order Details</span>
             </button>
 
             <button
               type="button"
-              onClick={() => navigateAdmin('orders')}
-              className="px-4 py-2.5 bg-[#342f2c] text-white hover:bg-[#1f1b18] text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+              onClick={() => navigate('home')}
+              className="px-5 py-2.5 bg-[#932616] text-white hover:bg-[#b43e2b] text-xs font-bold rounded-xl cursor-pointer shadow"
             >
-              <span className="material-symbols-outlined text-base text-[#D49B24]">store</span>
-              <span>View in Admin Stream</span>
+              Continue Shopping
             </button>
           </div>
         </div>

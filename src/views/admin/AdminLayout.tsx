@@ -19,6 +19,7 @@ export const AdminLayout: React.FC = () => {
     navigate,
     isAcceptingOrders,
     orders,
+    logoutAdmin,
   } = useStore();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -193,7 +194,7 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         {/* Bottom Hub Certificate */}
-        <div className="p-3 bg-white/5 m-3 rounded-lg flex items-center justify-between border border-white/5">
+        <div className="p-3 bg-white/5 mx-3 mb-2 rounded-lg flex items-center justify-between border border-white/5">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#ffdcc0] text-[18px]">verified</span>
             <div className="flex flex-col">
@@ -201,6 +202,17 @@ export const AdminLayout: React.FC = () => {
               <span className="text-[10px] text-[#eae1db]/60">FSSAI & GI Hub</span>
             </div>
           </div>
+        </div>
+
+        {/* Admin Logout Button */}
+        <div className="mx-3 mb-3">
+          <button
+            onClick={() => logoutAdmin()}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-[#ffdad6] text-xs font-bold border border-red-800/30 transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            <span>Logout Admin</span>
+          </button>
         </div>
       </aside>
 
@@ -264,13 +276,23 @@ export const AdminLayout: React.FC = () => {
             {/* Super Admin Profile Lockup */}
             <div className="flex items-center gap-2.5">
               <div className="flex flex-col text-right hidden sm:flex">
-                <span className="text-xs font-bold text-[#1f1b18] leading-tight">Rajesh Varma</span>
-                <span className="text-[10px] text-[#932616] font-bold">Super Admin</span>
+                <span className="text-xs font-bold text-[#1f1b18] leading-tight">Jeeva (Admin)</span>
+                <span className="text-[10px] text-[#932616] font-bold">Authorized Admin</span>
               </div>
               <div className="w-8 h-8 rounded-full bg-[#932616] text-white flex items-center justify-center font-bold text-xs shadow-xs">
                 <span className="material-symbols-outlined text-base">person</span>
               </div>
             </div>
+
+            {/* Logout CTA */}
+            <button
+              onClick={() => logoutAdmin()}
+              className="h-9 px-2.5 bg-[#342f2c] hover:bg-[#1f1b18] text-[#ffdad6] text-xs font-bold rounded-lg border border-white/10 flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Logout Admin Session"
+            >
+              <span className="material-symbols-outlined text-base">logout</span>
+              <span className="hidden sm:inline">Logout</span>
+            </button>
           </div>
         </header>
 

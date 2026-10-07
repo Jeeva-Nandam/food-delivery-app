@@ -13,16 +13,25 @@ export const AdminDashboard: React.FC = () => {
 
   const [timeFilter, setTimeFilter] = useState<'Today' | 'Last 7 Days' | 'This Month' | 'Custom'>('Today');
   const [orderStreamFilter, setOrderStreamFilter] = useState<'All' | 'Needs Dispatch' | 'GI Direct'>('All');
+  const [orderStreamSearch, setOrderStreamSearch] = useState('');
   const [inspectOrder, setInspectOrder] = useState<Order | null>(null);
   const [labelModalOrder, setLabelModalOrder] = useState<Order | null>(null);
 
   // Filter orders for the stream
   const filteredOrders = orders.filter(ord => {
     if (orderStreamFilter === 'Needs Dispatch') {
-      return ord.status === 'New' || ord.status === 'Preparing';
+      if (ord.status !== 'New' && ord.status !== 'Preparing') return false;
     }
     if (orderStreamFilter === 'GI Direct') {
-      return ord.isGIDirect;
+      if (!ord.isGIDirect) return false;
+    }
+    if (orderStreamSearch.trim()) {
+      const q = orderStreamSearch.toLowerCase();
+      const match =
+        ord.orderNumber.toLowerCase().includes(q) ||
+        ord.customerName.toLowerCase().includes(q) ||
+        ord.customerPhone.includes(q);
+      if (!match) return false;
     }
     return true;
   });
@@ -358,21 +367,37 @@ export const AdminDashboard: React.FC = () => {
                 </p>
               </div>
 
-              {/* Status Filter Tabs */}
-              <div className="flex items-center gap-1">
-                {(['All', 'Needs Dispatch', 'GI Direct'] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setOrderStreamFilter(tab)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      orderStreamFilter === tab
-                        ? 'bg-[#b43e2b] text-white shadow-xs'
-                        : 'bg-[#fbf2ec] text-[#1f1b18] hover:bg-[#f6ece7]'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                {/* Search input control positioned BEFORE filter options */}
+                <div className="relative w-full sm:w-56">
+                  <span className="material-symbols-outlined absolute left-2.5 top-2 text-[#696159] text-sm pointer-events-none">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    value={orderStreamSearch}
+                    onChange={e => setOrderStreamSearch(e.target.value)}
+                    placeholder="Search live orders..."
+                    className="w-full h-8 pl-8 pr-2.5 bg-[#FAF8F5] border border-[#E8E2DA] rounded-lg text-xs text-[#1f1b18] focus:outline-none focus:border-[#932616]"
+                  />
+                </div>
+
+                {/* Status Filter Tabs */}
+                <div className="flex items-center gap-1 overflow-x-auto">
+                  {(['All', 'Needs Dispatch', 'GI Direct'] as const).map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setOrderStreamFilter(tab)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                        orderStreamFilter === tab
+                          ? 'bg-[#b43e2b] text-white shadow-xs'
+                          : 'bg-[#fbf2ec] text-[#1f1b18] hover:bg-[#f6ece7]'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

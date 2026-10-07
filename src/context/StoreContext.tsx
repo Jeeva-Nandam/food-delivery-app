@@ -1,3 +1,4 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Product,
@@ -99,13 +100,72 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const routerNavigate = useNavigate();
+  const location = useLocation();
+
   // Load initial states or defaults
   const [portalMode, setPortalMode] = useState<'store' | 'admin'>('store');
-  const [currentRoute, setCurrentRoute] = useState<CustomerRoute>('cart');
+  const [currentRoute, setCurrentRoute] = useState<CustomerRoute>('home');
   const [adminRoute, setAdminRoute] = useState<AdminRoute>('dashboard');
   const [selectedProductId, setSelectedProductId] = useState<string | null>('prod-halwa-01');
   const [selectedOrderNumber, setSelectedOrderNumber] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Admin authentication state
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('mhf_admin_auth') === 'true';
+  });
+
+  const loginAdmin = (username: string, password: string): boolean => {
+    if (username.trim().toLowerCase() === 'jeeva@admin' && password === 'adminadmin') {
+      setIsAdminAuthenticated(true);
+      sessionStorage.setItem('mhf_admin_auth', 'true');
+      return true;
+    }
+    return false;
+  };
+
+  const logoutAdmin = () => {
+    setIsAdminAuthenticated(false);
+    sessionStorage.removeItem('mhf_admin_auth');
+  };
+
+  // Sync state with location.pathname (handles browser history popstate and back-navigation)
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/') {
+      setCurrentRoute('home');
+      setPortalMode('store');
+    } else if (path === '/cart') {
+      setCurrentRoute('cart');
+      setPortalMode('store');
+    } else if (path === '/login') {
+      setCurrentRoute('login');
+      setPortalMode('store');
+    } else if (path === '/checkout') {
+      setCurrentRoute('checkout');
+      setPortalMode('store');
+    } else if (path === '/trackorder') {
+      setCurrentRoute('track-order');
+      setPortalMode('store');
+    } else if (path.startsWith('/order/')) {
+      setCurrentRoute('order-details');
+      setPortalMode('store');
+      const orderNum = path.replace('/order/', '');
+      setSelectedOrderNumber(decodeURIComponent(orderNum));
+    } else if (path.startsWith('/product/')) {
+      setCurrentRoute('product-detail');
+      setPortalMode('store');
+      const prodId = path.replace('/product/', '');
+      setSelectedProductId(decodeURIComponent(prodId));
+    } else if (path.startsWith('/adminpage')) {
+      setPortalMode('admin');
+    } else {
+      const stripped = path.replace('/', '') as CustomerRoute;
+      setCurrentRoute(stripped);
+      setPortalMode('store');
+    }
+  }, [location.pathname]);
 
   // Products
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -185,8 +245,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ]);
 
   // Navigation handlers
-  const navigate = (route: CustomerRoute, params?: { productId?: string; orderNumber?: string }) => {
-    setCurrentRoute(route);
+  const navigate = (route: CustomerRoute | string, params?: { productId?: string; orderNumber?: string }) => {
     setPortalMode('store');
     if (params?.productId) {
       setSelectedProductId(params.productId);
@@ -194,14 +253,68 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (params?.orderNumber) {
       setSelectedOrderNumber(params.orderNumber);
     }
+
+    let targetPath = '/';
+    if (route.startsWith('/')) {
+      targetPath = route;
+    } else {
+      switch (route) {
+        case 'home':
+          targetPath = '/';
+          break;
+        case 'cart':
+          targetPath = '/cart';
+          break;
+        case 'auth-check':
+        case 'login':
+          targetPath = '/login';
+          break;
+        case 'delivery-address':
+        case 'checkout':
+          targetPath = '/checkout';
+          break;
+        case 'track-order':
+          targetPath = '/trackorder';
+          break;
+        case 'order-details':
+          targetPath = params?.orderNumber
+            ? `/order/${encodeURIComponent(params.orderNumber.replace(/^#/, ''))}`
+            : '/trackorder';
+          break;
+        case 'order-success':
+          targetPath = params?.orderNumber
+            ? `/order/${encodeURIComponent(params.orderNumber.replace(/^#/, ''))}`
+            : '/order-success';
+          break;
+        case 'product-detail':
+          targetPath = params?.productId ? `/product/${params.productId}` : '/';
+          break;
+        case 'shop-all':
+        case 'regional-sweets':
+        case 'savouries-and-mixtures':
+        case 'handcrafted-pickles':
+        case 'millet-and-health':
+        case 'about-us':
+        case 'contact':
+          targetPath = `/${route}`;
+          break;
+        default:
+          targetPath = '/';
+      }
+    }
+
+    setCurrentRoute(route as CustomerRoute);
+    routerNavigate(targetPath);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateAdmin = (route: AdminRoute) => {
     setAdminRoute(route);
     setPortalMode('admin');
+    routerNavigate('/adminpage');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
   // Cart Handlers
   const addToCart = (product: Product, quantity: number = 1) => {
@@ -435,6 +548,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         navigateAdmin,
         selectedProductId,
         selectedOrderNumber,
+        isAdminAuthenticated,
+        loginAdmin,
+        logoutAdmin,
         searchQuery,
         setSearchQuery,
         cartItems,

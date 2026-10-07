@@ -57,13 +57,21 @@ export const TrackOrderView: React.FC = () => {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#fbf2ec] text-[#932616] border border-[#ffdcc0]">
                   Status: {matchedOrder.status}
                 </span>
                 <span className="text-xs font-semibold text-[#005c15] bg-[#a3f69c]/30 px-3 py-1 rounded-full">
                   AWB: {matchedOrder.trackingId}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/order/${encodeURIComponent(matchedOrder.orderNumber.replace(/^#/, ''))}`)}
+                  className="px-3 py-1 rounded-full text-xs font-bold bg-[#FAF8F5] hover:bg-[#eae1db] text-[#1f1b18] border border-[#E8E2DA] cursor-pointer flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm text-[#932616]">receipt_long</span>
+                  <span>View Details</span>
+                </button>
               </div>
             </div>
 

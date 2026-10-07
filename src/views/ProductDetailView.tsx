@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 
 export const ProductDetailView: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const { products, selectedProductId, addToCart, navigate } = useStore();
 
-  const product = products.find(p => p.id === selectedProductId) || products[0];
+  const targetId = id || selectedProductId;
+  const product = products.find(p => p.id === targetId) || products[0];
 
   const [quantity, setQuantity] = useState(1);
   const [selectedWeight, setSelectedWeight] = useState(product.weight || '500g');
