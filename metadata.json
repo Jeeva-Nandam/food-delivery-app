@@ -1,0 +1,7 @@
+{
+  "name": "Miras Heritage Foods",
+  "description": "Authentic regional Indian delicacies and heirloom culinary sweets, savouries, pickles, and millets with seamless order checkout and full administrative operations portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
