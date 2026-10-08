@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { CategoryType } from '../../types';
 
 export const AdminCategories: React.FC = () => {
-  const { categories, addCategory, toggleCategoryActive } = useStore();
+  const { categories, addCategory, deleteCategory, toggleCategoryActive } = useStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -80,12 +80,25 @@ export const AdminCategories: React.FC = () => {
 
             <div className="pt-3 border-t border-[#E8E2DA] flex items-center justify-between">
               <span className="text-xs font-bold text-[#1f1b18]">{cat.itemCount} Delicacies</span>
-              <button
-                onClick={() => toggleCategoryActive(cat.id)}
-                className="text-xs font-bold text-[#932616] hover:underline cursor-pointer"
-              >
-                {cat.isActive ? 'Disable Category' : 'Enable Category'}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => toggleCategoryActive(cat.id)}
+                  className="text-xs font-bold text-[#932616] hover:underline cursor-pointer"
+                >
+                  {cat.isActive ? 'Disable' : 'Enable'}
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete category "${cat.name}"?`)) {
+                      deleteCategory(cat.id);
+                    }
+                  }}
+                  className="p-1 text-[#696159] hover:text-[#ba1a1a] transition-colors cursor-pointer"
+                  title="Delete Category"
+                >
+                  <span className="material-symbols-outlined text-base">delete</span>
+                </button>
+              </div>
             </div>
           </div>
         ))}

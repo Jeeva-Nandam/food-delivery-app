@@ -88,6 +88,7 @@ interface StoreContextType {
   deleteProduct: (id: string) => void;
   categories: CategoryInfo[];
   addCategory: (cat: Omit<CategoryInfo, 'id'>) => void;
+  deleteCategory: (id: string) => void;
   toggleCategoryActive: (id: string) => void;
   customers: User[];
   updateCustomer: (id: string, updates: Partial<User>) => void;
@@ -202,6 +203,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Admin store status
   const [isAcceptingOrders, setIsAcceptingOrders] = useState<boolean>(true);
+
+  // Fetch initial live data from backend API (with graceful fallback to mock data)
+  useEffect(() => {
+    fetch('/api/products')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setProducts(res.data);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/categories')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setCategories(res.data);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/coupons')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setCoupons(res.data);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/admin/orders')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setOrders(res.data);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data && res.data.isAcceptingOrders !== undefined) {
+          setIsAcceptingOrders(res.data.isAcceptingOrders);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Additional mock customers for admin table
   const [customers, setCustomers] = useState<User[]>([
@@ -478,6 +527,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setOrders(prev => [newOrder, ...prev]);
     setLatestPlacedOrder(newOrder);
     setCartItems([]); // Clear cart upon placing order
+
+    // Persist to backend API / MongoDB
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder),
+    })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data) {
+          setOrders(prev => [res.data, ...prev.filter(o => o.id !== newOrder.id)]);
+          setLatestPlacedOrder(res.data);
+        }
+      })
+      .catch(err => console.warn('Order sync fallback:', err));
+
     return newOrder;
   };
 
@@ -485,40 +550,99 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setOrders(prev =>
       prev.map(ord => (ord.id === orderId ? { ...ord, status } : ord))
     );
+
+    fetch(`/api/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }).catch(err => console.warn('Order status sync fallback:', err));
   };
 
-  // Admin Product Handlers
+  // Admin Product Handlers (Full persistence)
   const addProduct = (prod: Omit<Product, 'id'>) => {
     const newProd: Product = {
       ...prod,
       id: `prod-${Date.now()}`,
     };
     setProducts(prev => [newProd, ...prev]);
+
+    fetch('/api/admin/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProd),
+    })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data) {
+          setProducts(prev => [res.data, ...prev.filter(p => p.id !== newProd.id)]);
+        }
+      })
+      .catch(err => console.warn('Product sync fallback:', err));
   };
 
   const updateProduct = (id: string, updates: Partial<Product>) => {
     setProducts(prev =>
       prev.map(prod => (prod.id === id ? { ...prod, ...updates } : prod))
     );
+
+    fetch(`/api/admin/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    }).catch(err => console.warn('Product update sync fallback:', err));
   };
 
   const deleteProduct = (id: string) => {
     setProducts(prev => prev.filter(prod => prod.id !== id));
+
+    fetch(`/api/admin/products/${id}`, {
+      method: 'DELETE',
+    }).catch(err => console.warn('Product delete sync fallback:', err));
   };
 
-  // Category handlers
+  // Category handlers (Full persistence)
   const addCategory = (cat: Omit<CategoryInfo, 'id'>) => {
     const newCat: CategoryInfo = {
       ...cat,
       id: `cat-${Date.now()}`,
     };
     setCategories(prev => [...prev, newCat]);
+
+    fetch('/api/admin/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newCat),
+    })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data) {
+          setCategories(prev => [...prev.filter(c => c.id !== newCat.id), res.data]);
+        }
+      })
+      .catch(err => console.warn('Category sync fallback:', err));
   };
 
   const toggleCategoryActive = (id: string) => {
+    const current = categories.find(c => c.id === id);
+    const newActive = current ? !current.isActive : true;
+
     setCategories(prev =>
-      prev.map(cat => (cat.id === id ? { ...cat, isActive: !cat.isActive } : cat))
+      prev.map(cat => (cat.id === id ? { ...cat, isActive: newActive } : cat))
     );
+
+    fetch(`/api/admin/categories/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isActive: newActive }),
+    }).catch(err => console.warn('Category toggle sync fallback:', err));
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategories(prev => prev.filter(cat => cat.id !== id));
+
+    fetch(`/api/admin/categories/${id}`, {
+      method: 'DELETE',
+    }).catch(err => console.warn('Category delete sync fallback:', err));
   };
 
   // Customer handler
@@ -534,7 +658,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const toggleAcceptingOrders = () => {
-    setIsAcceptingOrders(prev => !prev);
+    const nextVal = !isAcceptingOrders;
+    setIsAcceptingOrders(nextVal);
+
+    fetch('/api/admin/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isAcceptingOrders: nextVal }),
+    }).catch(err => console.warn('Settings toggle sync fallback:', err));
   };
 
   return (
@@ -589,6 +720,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deleteProduct,
         categories,
         addCategory,
+        deleteCategory,
         toggleCategoryActive,
         customers,
         updateCustomer,
